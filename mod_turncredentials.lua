@@ -4,7 +4,7 @@
 
 --turncredentials_secret = "keepthissecret";
 --turncredentials = {
---    { type = "stun", host = "8.8.8.8" },
+--    { type = "stun", host = "8.8.8.8", port = 3478 },
 --    { type = "turn", host = "8.8.8.8", port = 3478 },
 --    { type = "turn", host = "8.8.8.8", port = 80, transport = "tcp" }
 --}
@@ -50,19 +50,27 @@ module:hook("iq-get/host/urn:xmpp:extdisco:1:services", function(event)
     local reply = st.reply(stanza):tag("services", {xmlns = "urn:xmpp:extdisco:1"})
     for idx, item in pairs(hosts) do
         if item.type == "stun" or item.type == "stuns" then
+            local stun = {}
             -- stun items need host and port (defaults to 3478)
-            reply:tag("service", item):up();
+            stun.type = item.type;
+            stun.port = ("%d"):format(item.port);
+            if item.hosts then
+                stun.host = random(item.hosts)
+            else
+                stun.host = item.host
+            end
+            reply:tag("service", stun):up();
         elseif item.type == "turn" or item.type == "turns" then
             local turn = {}
             -- turn items need host, port (defaults to 3478), 
 	          -- transport (defaults to udp)
 	          -- username, password, ttl
             turn.type = item.type;
-            turn.port = item.port;
+            turn.port = ("%d"):format(item.port);
             turn.transport = item.transport;
             turn.username = userpart;
             turn.password = nonce;
-            turn.ttl = ttl;
+            turn.ttl = ("%d"):format(ttl);
             if item.hosts then
                 turn.host = random(item.hosts)
             else
